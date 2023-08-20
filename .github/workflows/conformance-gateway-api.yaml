@@ -87,6 +87,8 @@ jobs:
         include:
         - crd-channel: experimental
         - crd-channel: standard
+        - crd-channel: experimental
+          conformance-profile: true
     steps:
       - name: Checkout context ref (trusted)
         uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
@@ -228,13 +230,31 @@ jobs:
             controllerName: io.cilium/gateway-controller
           EOF
           
-          GATEWAY_API_CONFORMANCE_TESTS=1 go test \
-            -p 4 \
-            -v ./operator/pkg/gateway-api \
-            --gateway-class cilium \
-            --supported-features "${{ steps.vars.outputs.supported_features }}" \
-            -test.run "TestConformance" \
-            -test.skip "${{ steps.vars.outputs.skipped_tests }}"
+          TEST_RUN="TestConformance"
+          if [ ${{ matrix.conformance-profile }} == "true" ]; then
+            GATEWAY_API_CONFORMANCE_TESTS=1 go test \
+              -p 4 \
+              -v ./operator/pkg/gateway-api \
+              --gateway-class cilium \
+              --supported-features "${{ steps.vars.outputs.supported_features }}" \
+              --conformance-profiles HTTP,TLS \
+              --organization cilium \
+              --project cilium \
+              --url github.com/cilium/cilium \
+              --version main \
+              --contact https://github.com/cilium/community/blob/main/roles/Maintainers.md \
+              -test.run "TestExperimentalConformance" \
+              -test.skip "${{ steps.vars.outputs.skipped_tests }}" \
+              "${EXTRA_FLAGS}"
+          else
+            GATEWAY_API_CONFORMANCE_TESTS=1 go test \
+              -p 4 \
+              -v ./operator/pkg/gateway-api \
+              --gateway-class cilium \
+              --supported-features "${{ steps.vars.outputs.supported_features }}" \
+              -test.run "TestConformance" \
+              -test.skip "${{ steps.vars.outputs.skipped_tests }}"
+          fi
 
       - name: Post-test information gathering
         if: ${{ !success() && steps.install-cilium.outcome != 'skipped' }}
