@@ -3060,7 +3060,13 @@ int tail_handle_snat_fwd_ipv4(struct __ctx_buff *ctx)
 		return send_drop_notify_error_ext(ctx, 0, ret, ext_err,
 						  CTX_ACT_DROP, METRIC_EGRESS);
 
-	send_trace_notify(ctx, obs_point, 0, 0, 0, 0, trace.reason, trace.monitor);
+	/* Don't emit a trace event if the packet has been redirected to another
+	 * interface.
+	 * This can happen for egress gateway traffic that needs to egress from
+	 * the interface to which the egress IP is assigned to.
+	 */
+	if (ret == CTX_ACT_OK)
+		send_trace_notify(ctx, obs_point, 0, 0, 0, 0, trace.reason, trace.monitor);
 
 	return ret;
 }
