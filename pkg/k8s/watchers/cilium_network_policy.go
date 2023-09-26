@@ -271,7 +271,7 @@ func (k *K8sWatcher) onUpsert(
 		err = k.addCiliumNetworkPolicyV2(cs, translatedCNP, initialRecvTime, resourceID)
 	}
 	if err == nil {
-		cnpCache[key] = cnpCpy
+		cnpCache[key] = cnp
 	}
 
 	return err
