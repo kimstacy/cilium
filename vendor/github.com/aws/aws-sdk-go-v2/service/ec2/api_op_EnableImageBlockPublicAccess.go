@@ -16,42 +16,38 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Removes the specified inbound (ingress) rules from a security group. You can
-// specify rules using either rule IDs or security group rule properties. If you
-// use rule properties, the values that you specify (for example, ports) must match
-// the existing rule's values exactly. Each rule has a protocol, from and to ports,
-// and source (CIDR range, security group, or prefix list). For the TCP and UDP
-// protocols, you must also specify the destination port or range of ports. For the
-// ICMP protocol, you must also specify the ICMP type and code. If the security
-// group rule has a description, you do not need to specify the description to
-// revoke the rule. For a default VPC, if the values you specify do not match the
-// existing rule's values, no error is returned, and the output describes the
-// security group rules that were not revoked. For a non-default VPC, if the values
-// you specify do not match the existing rule's values, an
-// InvalidPermission.NotFound client error is returned, and no rules are revoked.
-// Amazon Web Services recommends that you describe the security group to verify
-// that the rules were removed. Rule changes are propagated to instances within the
-// security group as quickly as possible. However, a small delay might occur.
-func (c *Client) RevokeSecurityGroupIngress(ctx context.Context, params *RevokeSecurityGroupIngressInput, optFns ...func(*Options)) (*RevokeSecurityGroupIngressOutput, error) {
+// Enables block public access for AMIs at the account level in the specified
+// Amazon Web Services Region. This prevents the public sharing of your AMIs.
+// However, if you already have public AMIs, they will remain publicly available.
+// The API can take up to 10 minutes to configure this setting. During this time,
+// if you run GetImageBlockPublicAccessState (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetImageBlockPublicAccessState.html)
+// , the response will be unblocked . When the API has completed the configuration,
+// the response will be block-new-sharing . For more information, see Block public
+// access to your AMIs (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/sharingamis-intro.html#block-public-access-to-amis)
+// in the Amazon EC2 User Guide.
+func (c *Client) EnableImageBlockPublicAccess(ctx context.Context, params *EnableImageBlockPublicAccessInput, optFns ...func(*Options)) (*EnableImageBlockPublicAccessOutput, error) {
 	if params == nil {
-		params = &RevokeSecurityGroupIngressInput{}
+		params = &EnableImageBlockPublicAccessInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RevokeSecurityGroupIngress", params, optFns, c.addOperationRevokeSecurityGroupIngressMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "EnableImageBlockPublicAccess", params, optFns, c.addOperationEnableImageBlockPublicAccessMiddlewares)
 	if err != nil {
 		return nil, err
 	}
 
-	out := result.(*RevokeSecurityGroupIngressOutput)
+	out := result.(*EnableImageBlockPublicAccessOutput)
 	out.ResultMetadata = metadata
 	return out, nil
 }
 
-type RevokeSecurityGroupIngressInput struct {
+type EnableImageBlockPublicAccessInput struct {
 
-	// The CIDR IP address range. You can't specify this parameter when specifying a
-	// source security group.
-	CidrIp *string
+	// Specify block-new-sharing to enable block public access for AMIs at the account
+	// level in the specified Region. This will block any attempt to publicly share
+	// your AMIs in the specified Region.
+	//
+	// This member is required.
+	ImageBlockPublicAccessState types.ImageBlockPublicAccessEnabledState
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
@@ -59,55 +55,14 @@ type RevokeSecurityGroupIngressInput struct {
 	// UnauthorizedOperation .
 	DryRun *bool
 
-	// If the protocol is TCP or UDP, this is the start of the port range. If the
-	// protocol is ICMP, this is the type number. A value of -1 indicates all ICMP
-	// types.
-	FromPort *int32
-
-	// The ID of the security group.
-	GroupId *string
-
-	// [Default VPC] The name of the security group. You must specify either the
-	// security group ID or the security group name in the request. For security groups
-	// in a nondefault VPC, you must specify the security group ID.
-	GroupName *string
-
-	// The sets of IP permissions. You can't specify a source security group and a
-	// CIDR IP address range in the same set of permissions.
-	IpPermissions []types.IpPermission
-
-	// The IP protocol name ( tcp , udp , icmp ) or number (see Protocol Numbers (http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
-	// ). Use -1 to specify all.
-	IpProtocol *string
-
-	// The IDs of the security group rules.
-	SecurityGroupRuleIds []string
-
-	// [Default VPC] The name of the source security group. You can't specify this
-	// parameter in combination with the following parameters: the CIDR IP address
-	// range, the start of the port range, the IP protocol, and the end of the port
-	// range. The source security group must be in the same VPC. To revoke a specific
-	// rule for an IP protocol and port range, use a set of IP permissions instead.
-	SourceSecurityGroupName *string
-
-	// Not supported.
-	SourceSecurityGroupOwnerId *string
-
-	// If the protocol is TCP or UDP, this is the end of the port range. If the
-	// protocol is ICMP, this is the code. A value of -1 indicates all ICMP codes.
-	ToPort *int32
-
 	noSmithyDocumentSerde
 }
 
-type RevokeSecurityGroupIngressOutput struct {
+type EnableImageBlockPublicAccessOutput struct {
 
-	// Returns true if the request succeeds; otherwise, returns an error.
-	Return *bool
-
-	// The inbound rules that were unknown to the service. In some cases,
-	// unknownIpPermissionSet might be in a different format from the request parameter.
-	UnknownIpPermissions []types.IpPermission
+	// Returns block-new-sharing if the request succeeds; otherwise, it returns an
+	// error.
+	ImageBlockPublicAccessState types.ImageBlockPublicAccessEnabledState
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
@@ -115,12 +70,12 @@ type RevokeSecurityGroupIngressOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) addOperationRevokeSecurityGroupIngressMiddlewares(stack *middleware.Stack, options Options) (err error) {
-	err = stack.Serialize.Add(&awsEc2query_serializeOpRevokeSecurityGroupIngress{}, middleware.After)
+func (c *Client) addOperationEnableImageBlockPublicAccessMiddlewares(stack *middleware.Stack, options Options) (err error) {
+	err = stack.Serialize.Add(&awsEc2query_serializeOpEnableImageBlockPublicAccess{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsEc2query_deserializeOpRevokeSecurityGroupIngress{}, middleware.After)
+	err = stack.Deserialize.Add(&awsEc2query_deserializeOpEnableImageBlockPublicAccess{}, middleware.After)
 	if err != nil {
 		return err
 	}
@@ -163,10 +118,13 @@ func (c *Client) addOperationRevokeSecurityGroupIngressMiddlewares(stack *middle
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addRevokeSecurityGroupIngressResolveEndpointMiddleware(stack, options); err != nil {
+	if err = addEnableImageBlockPublicAccessResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opRevokeSecurityGroupIngress(options.Region), middleware.Before); err != nil {
+	if err = addOpEnableImageBlockPublicAccessValidationMiddleware(stack); err != nil {
+		return err
+	}
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opEnableImageBlockPublicAccess(options.Region), middleware.Before); err != nil {
 		return err
 	}
 	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
@@ -187,25 +145,25 @@ func (c *Client) addOperationRevokeSecurityGroupIngressMiddlewares(stack *middle
 	return nil
 }
 
-func newServiceMetadataMiddleware_opRevokeSecurityGroupIngress(region string) *awsmiddleware.RegisterServiceMetadata {
+func newServiceMetadataMiddleware_opEnableImageBlockPublicAccess(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
 		SigningName:   "ec2",
-		OperationName: "RevokeSecurityGroupIngress",
+		OperationName: "EnableImageBlockPublicAccess",
 	}
 }
 
-type opRevokeSecurityGroupIngressResolveEndpointMiddleware struct {
+type opEnableImageBlockPublicAccessResolveEndpointMiddleware struct {
 	EndpointResolver EndpointResolverV2
 	BuiltInResolver  builtInParameterResolver
 }
 
-func (*opRevokeSecurityGroupIngressResolveEndpointMiddleware) ID() string {
+func (*opEnableImageBlockPublicAccessResolveEndpointMiddleware) ID() string {
 	return "ResolveEndpointV2"
 }
 
-func (m *opRevokeSecurityGroupIngressResolveEndpointMiddleware) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
+func (m *opEnableImageBlockPublicAccessResolveEndpointMiddleware) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
 	out middleware.SerializeOutput, metadata middleware.Metadata, err error,
 ) {
 	if awsmiddleware.GetRequiresLegacyEndpoints(ctx) {
@@ -307,8 +265,8 @@ func (m *opRevokeSecurityGroupIngressResolveEndpointMiddleware) HandleSerialize(
 	return next.HandleSerialize(ctx, in)
 }
 
-func addRevokeSecurityGroupIngressResolveEndpointMiddleware(stack *middleware.Stack, options Options) error {
-	return stack.Serialize.Insert(&opRevokeSecurityGroupIngressResolveEndpointMiddleware{
+func addEnableImageBlockPublicAccessResolveEndpointMiddleware(stack *middleware.Stack, options Options) error {
+	return stack.Serialize.Insert(&opEnableImageBlockPublicAccessResolveEndpointMiddleware{
 		EndpointResolver: options.EndpointResolverV2,
 		BuiltInResolver: &builtInResolver{
 			Region:       options.Region,
