@@ -110,6 +110,30 @@ jobs:
             encryption: 'wireguard'
             kube-proxy: 'iptables'
 
+          - name: '5'
+            encryption: 'disabled'
+            kube-proxy: 'iptables'
+
+          - name: '6'
+            encryption: 'disabled'
+            kube-proxy: 'none'
+
+          - name: '7'
+            encryption: 'wireguard'
+            kube-proxy: 'iptables'
+
+          - name: '8'
+            encryption: 'disabled'
+            kube-proxy: 'iptables'
+
+          - name: '9'
+            encryption: 'disabled'
+            kube-proxy: 'none'
+
+          - name: '0'
+            encryption: 'wireguard'
+            kube-proxy: 'iptables'
+
     steps:
       - name: Checkout context ref (trusted)
         uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
@@ -128,6 +152,7 @@ jobs:
           else
             SHA="${{ github.sha }}"
           fi
+          SHA=39dce8574d453b6957a85923ec768ded07b4ff42
 
           CILIUM_DOWNGRADE_VERSION=$(contrib/scripts/print-downgrade-version.sh)
 
@@ -152,7 +177,7 @@ jobs:
             --set=hubble.enabled=false \
             --set=tunnel=vxlan \
             --set=ipv4.enabled=true \
-            --set=ipv6.enabled=true \
+            --set=ipv6.enabled=false \
             --set=clustermesh.useAPIServer=true \
             --set=clustermesh.config.enabled=true \
             --set=extraConfig.clustermesh-ip-identities-sync-timeout=5m"
@@ -366,7 +391,7 @@ jobs:
             ${{ steps.vars.outputs.cilium_image_settings }} \
             ${{ steps.vars.outputs.cilium_install_defaults }} \
             ${{ steps.clustermesh-vars.outputs.cilium_install_cluster1 }} \
-            --set clustermesh.apiserver.kvstoremesh.enabled=true
+            --set clustermesh.apiserver.kvstoremesh.enabled=false
 
       - name: Rollout Cilium agents in cluster2
         run: |
