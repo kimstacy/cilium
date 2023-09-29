@@ -226,7 +226,7 @@ jobs:
             --argfile focus main-focus.json \
             '.include |= map(select(.["k8s-version"] as $k | $prs[] | select($k == .))) + $focus.include |
             . + {"k8s-version": $prs} |
-            .focus = $focus.focus | .exclude = $focus.exclude' \
+            .focus = $focus.focus | .["k8s-version"] as $k | .exclude = [$focus.exclude[] | select($k[] == ."k8s-version")]' \
             main-k8s-versions-race.json> /tmp/merged.json
           echo "Generated matrix:"
           cat /tmp/merged.json
